@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+             x:Class="PhotoClumba.SelectedObjectPage"
+             Title="Отправить отчёт" BackgroundColor="#424242">
+    <ContentPage.Content>
+        <StackLayout>
+            <Grid x:Name="GridImage" VerticalOptions="FillAndExpand" BackgroundColor="#424242">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="0" />
+                </Grid.RowDefinitions>
+            </Grid>
+            <StackLayout Orientation="Horizontal" HeightRequest="30" VerticalOptions="End">
+                <CheckBox x:Name="Прополото" IsEnabled="True" Color="LightGray"></CheckBox>
+                <Label Text="Прополото" TextColor="LightGray"></Label>
+                <CheckBox x:Name="Полито" IsEnabled="True" Color="LightGray"></CheckBox>
+                <Label Text="Полито" TextColor="LightGray"></Label>
+                <CheckBox x:Name="НаличиеЦветов" IsEnabled="True" Color="LightGray"></CheckBox>
+                <Label Text="Наличие цветов" TextColor="LightGray"></Label>
+            </StackLayout>
+            <Editor x:Name="comment" Placeholder="Комментарий" PlaceholderColor="LightGray" TextColor="LightGray" HeightRequest="150" IsTextPredictionEnabled="True" VerticalOptions="End"/>
+            <Button x:Name="SendButton" Text="Отправить" VerticalOptions="End" Clicked="Send_Clicked"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

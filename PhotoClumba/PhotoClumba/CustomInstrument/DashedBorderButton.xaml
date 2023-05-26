@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ContentView xmlns="http://xamarin.com/schemas/2014/forms" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhotoClumba.DashedBorderButton"
+             xmlns:yummy="clr-namespace:Xamarin.Forms.PancakeView;assembly=Xamarin.Forms.PancakeView">
+    <yummy:PancakeView x:Name="DashBorder" Border="{yummy:BorderMarkup Color=Gray, Thickness='5', DashPattern='4'}">
+        <Button x:Name="AddButton" BackgroundColor="#424242" TextColor="LightGray" Text="+" FontSize="26" CornerRadius="20"></Button>
+    </yummy:PancakeView>
+</ContentView>

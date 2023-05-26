@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhotoClumba.MainPage"
+             Title="Адреса" BackgroundColor="#424242">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem IconImageSource="exit.png" Order="Primary" Priority="0" Clicked="ToolbarItem_Clicked"/>
+    </ContentPage.ToolbarItems>
+    <StackLayout x:Name="MainStackAdress">
+
+        <ListView x:Name="adressList" ItemTapped="adressList_ItemTapped" BackgroundColor="#424242">
+        </ListView>
+    </StackLayout>
+
+</ContentPage>

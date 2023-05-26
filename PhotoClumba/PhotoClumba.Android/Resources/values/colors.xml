@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#FFFFFF</color>
+	<color name="textColor">@android:color/white</color>
+	<color name="background">#424242</color>
+	<color name="windowBackground">#424242</color>
+	<color name="textColorPrimary">@android:color/white</color>
+    <color name="colorPrimary">#424242</color>
+	<color name="colorOnPrimary">#424242</color>
+	<color name="textColorSecondary">@android:color/white</color>
+	<!--<color name="colorSecondary">#424242</color>
+	<color name="colorOnSecondary">#424242</color>
+    <color name="colorPrimaryDark">#424242</color>-->
+    <color name="colorAccent">@android:color/white</color>
+	<color name="ListViewSelected">#00c7aa</color>
+	<color name="ListViewHighlighted">#00c7aa</color>
+	<!--<color name="colorSecondaryVariant">#424242</color>-->
+</resources>
