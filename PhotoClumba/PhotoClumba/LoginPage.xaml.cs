@@ -29,7 +29,6 @@ namespace PhotoClumba
                 App.conn.Open();
                 if (Connectivity.NetworkAccess == NetworkAccess.Internet && App.conn.Ping())
                 {
-                    Console.WriteLine(App.conn.Ping());
                     AuthBut.IsEnabled = false;
                     string com = $"SELECT IsLogged FROM users WHERE (Login='{AuthLogin.Text}' AND Password='{AuthPassword.Text}')";
                     MySqlCommand cmd = new MySqlCommand(com, App.conn);

@@ -25,7 +25,6 @@ namespace PhotoClumba
             if (App.conn.State == ConnectionState.Closed) { App.conn.Open(); }
             if (App.conn.Ping())
             {
-                Console.WriteLine("Ping");
                 MySqlCommand cmd = new MySqlCommand($"SELECT * FROM users WHERE (Login='{storedLogin}')",App.conn);
                 var reader = cmd.ExecuteReader();
                 if (reader.Read())

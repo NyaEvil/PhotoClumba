@@ -194,7 +194,7 @@ namespace PhotoClumba
                 {
                     SendButton.BackgroundColor = Color.Default;
                     return;
-                } //catch (System.InvalidOperationException)
+                } catch (System.InvalidOperationException)
                 {
                     SendButton.BackgroundColor = Color.Default;
                     App.conn.Close();
