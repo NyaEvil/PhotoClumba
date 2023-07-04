@@ -95,50 +95,56 @@ namespace PhotoClumba
                     foreach (var item in objects)
                     {
                         int id = -1;
-                        App.conn.Open();
+                        try
+                        {
+                            App.conn.Open();
+                        } catch (Exception ex)
+                        {
+                            await DisplayAlert("Ошибка", ex.Message, "OK");
+                        }
                         if (App.conn.Ping())
                         {
-                            string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{user.GetLogin()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
-                            MySqlCommand cmd = new MySqlCommand(com, App.conn);
-                            cmd.ExecuteNonQuery();
-                            com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{user.GetLogin()}') ORDER BY id DESC";
-                            cmd = new MySqlCommand(com, App.conn);
-                            var reader = cmd.ExecuteReader();
-                            if (reader.Read())
+                            try
                             {
-                                id = reader.GetInt32(0);
-                            }
-                            App.conn.Close();
-
-                            foreach (Image image in GridImage.Children.OfType<Image>())
-                            {
-                                try
+                                string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{user.GetLogin()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
+                                MySqlCommand cmd = new MySqlCommand(com, App.conn);
+                                cmd.ExecuteNonQuery();
+                                com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{user.GetLogin()}') ORDER BY id DESC";
+                                cmd = new MySqlCommand(com, App.conn);
+                                var reader = cmd.ExecuteReader();
+                                if (reader.Read())
                                 {
-                                    string localPath = image.Source.ToString();
-                                    localPath = localPath.Substring(6);
-                                    string[] strings = localPath.Split(new char[] { '/' });
-                                    string filename = strings[strings.Length - 1];
-                                    SendButton.BackgroundColor = Color.Green;
-                                    await DisplayAlert("Внмиание", "Загрузка начнется по нажатию кнопки ОК", "ОК");
-                                    fTPClient.UploadFile(localPath, filename);
+                                    id = reader.GetInt32(0);
                                 }
-                                catch (Exception ex)
+                                App.conn.Close();
+                                foreach (Image image in GridImage.Children.OfType<Image>())
                                 {
-                                    string localPath = image.Source.ToString();
-                                    localPath = localPath.Substring(6);
-                                    string[] strings = localPath.Split(new char[] { '/' });
-                                    string filename = strings[strings.Length - 1];
-                                    await DisplayAlert("Ошибка", ex.Message, "ОК");
-                                    fTPClient.DeleteFile(filename);
-                                    break;
+                                    try
+                                    {
+                                        string localPath = image.Source.ToString();
+                                        localPath = localPath.Substring(6);
+                                        string[] strings = localPath.Split(new char[] { '/' });
+                                        string filename = strings[strings.Length - 1];
+                                        SendButton.BackgroundColor = Color.Green;
+                                        await DisplayAlert("Внмиание", "Загрузка начнется по нажатию кнопки ОК", "ОК");
+                                        fTPClient.UploadFile(localPath, filename);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        await DisplayAlert("Ошибка", ex.Message, "OK");
+                                        //string localPath = image.Source.ToString();
+                                        //localPath = localPath.Substring(6);
+                                        //string[] strings = localPath.Split(new char[] { '/' });
+                                        //string filename = strings[strings.Length - 1];
+                                        //await DisplayAlert("Ошибка", ex.Message, "ОК");
+                                        //fTPClient.DeleteFile(filename);
+                                        //break;
+                                    }
+
+
                                 }
 
-
-                            }
-
-                            foreach (Image image in GridImage.Children.OfType<Image>())
-                            {
-                                try
+                                foreach (Image image in GridImage.Children.OfType<Image>())
                                 {
                                     App.conn.Open();
                                     string localPath = image.Source.ToString();
@@ -149,17 +155,14 @@ namespace PhotoClumba
                                     cmd = new MySqlCommand(com, App.conn);
                                     cmd.ExecuteNonQuery();
                                     App.conn.Close();
-                                }
-                                catch (Exception ex)
-                                {
-                                    await DisplayAlert("Ошибка", ex.Message, "ОК");
                                     SendButton.BackgroundColor = Color.Default;
                                     break;
                                 }
-
+                                reader.Close();
+                            } catch(Exception ex)
+                            {
+                                await DisplayAlert("Ошибка", ex.Message, "OK");
                             }
-
-                            reader.Close();
                         } else
                         {
                             await DisplayAlert("Ошибка", "Нет подключения к серверу", "ОК");
@@ -174,19 +177,21 @@ namespace PhotoClumba
                 if (response.StatusCode == FtpStatusCode.ClosingData)
                 {
                     await DisplayAlert("Успех!", "Передача успешна", "ОК");
+                        response.Dispose(); //TEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSTTTTTTTTTTTTT
                         SendButton.BackgroundColor = Color.Default;
-                        Navigation.PopAsync();
+                        await Navigation.PopAsync();
                 }
                 else
                 {
-                    await DisplayAlert("Ошибка", "Передача не удалась!", "ОК");
+                    await DisplayAlert("Ошибка", "FTP Передача не удалась!", "ОК");
+                        response.Dispose(); //TTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTT
                         SendButton.BackgroundColor = Color.Default;
-                        Navigation.PopAsync();
+                        await Navigation.PopAsync();
                 }
                 }
                 catch (MySqlException ex)
                 {
-                    await DisplayAlert("Ошибка", "Потеряно подключеие к серверу", "ОК");
+                    await DisplayAlert("Ошибка", "MySQL Потеряно подключеие к серверу", "ОК");
                     SendButton.BackgroundColor = Color.Default;
                     Navigation?.PopAsync();
                 }
@@ -194,10 +199,15 @@ namespace PhotoClumba
                 {
                     SendButton.BackgroundColor = Color.Default;
                     return;
-                } catch (System.InvalidOperationException)
+                } catch (System.InvalidOperationException ex)
                 {
+                    await DisplayAlert("Ошибка", "Строка 282" + ex.Message, "OK");
                     SendButton.BackgroundColor = Color.Default;
                     App.conn.Close();
+                    return;
+                } catch (Exception ex)
+                {
+                    await DisplayAlert("Ошибка", ex.Message, "OK");
                     return;
                 }
             } else
