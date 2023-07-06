@@ -5,7 +5,7 @@
              x:Class="PhotoClumba.SelectedObjectPage"
              Title="Отправить отчёт" BackgroundColor="#424242">
     <ContentPage.Content>
-        <StackLayout>
+        <StackLayout x:Name="MainStack">
             <Grid x:Name="GridImage" VerticalOptions="FillAndExpand" BackgroundColor="#424242">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

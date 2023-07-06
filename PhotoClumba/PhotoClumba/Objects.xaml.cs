@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,6 +24,12 @@ namespace PhotoClumba
             CreateObjectList();
 		}
 
+        protected override void OnAppearing()
+        {
+            Console.WriteLine("Appeared!");
+            objectsList.SelectedItem = null;
+            objectsList.SelectedItems.Clear();
+        }
 
         private async void CreateObjectList()
         {

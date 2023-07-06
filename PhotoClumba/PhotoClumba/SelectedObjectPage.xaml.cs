@@ -28,9 +28,12 @@ namespace PhotoClumba
         public string adress;
         public int photoCount = 0;
         public string lastDate;
+        public static Button SendButton2 = new Button();
+
         public SelectedObjectPage()
         {
             InitializeComponent();
+            SendButton2 = SendButton;
             DashedBorderButton dashed = new DashedBorderButton();
             dashed.buttonColor.Clicked += AddButton_Clicked;
             GridImage.Children.Add(dashed);
@@ -77,143 +80,161 @@ namespace PhotoClumba
 
         private async void Send_Clicked(object sender, EventArgs e)
         {
-            if (!GridImage.Children.OfType<Image>().Any())
+            var result = await DisplayAlert("Внмиание", "Загрузка начнется по нажатию кнопки ОК", "ОК", "Отмена");
+            if (result)
             {
-                await DisplayAlert("Ошибка", "Сделайте хотя бы одно фото", "ОК");
-                SendButton.BackgroundColor = Color.Default;
-                return;
-            }
-            if (Connectivity.NetworkAccess == NetworkAccess.Internet)
-            {
-                try
+
+                if (!GridImage.Children.OfType<Image>().Any())
                 {
-                    UserLoginStore user = new UserLoginStore();
-                    int prop = Convert.ToInt32(Прополото.IsChecked);
-                    int polito = Convert.ToInt32(Полито.IsChecked);
-                    int flow = Convert.ToInt32(НаличиеЦветов.IsChecked);
-                    FTPClient fTPClient = new FTPClient("ftpuser", "hmaDbxo7");
-                    foreach (var item in objects)
+                    await DisplayAlert("Ошибка", "Сделайте хотя бы одно фото", "ОК");
+                    SendButton.BackgroundColor = Color.Default;
+                    return;
+                }
+                if (Connectivity.NetworkAccess == NetworkAccess.Internet)
+                {
+                    try
                     {
-                        int id = -1;
-                        try
+                        UserLoginStore user = new UserLoginStore();
+                        int prop = Convert.ToInt32(Прополото.IsChecked);
+                        int polito = Convert.ToInt32(Полито.IsChecked);
+                        int flow = Convert.ToInt32(НаличиеЦветов.IsChecked);
+                        FTPClient fTPClient = new FTPClient("ftpuser", "hmaDbxo7");
+                        foreach (var item in objects)
                         {
-                            App.conn.Open();
-                        } catch (Exception ex)
-                        {
-                            await DisplayAlert("Ошибка", ex.Message, "OK");
-                        }
-                        if (App.conn.Ping())
-                        {
+                            int id = -1;
                             try
                             {
-                                string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{user.GetLogin()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
-                                MySqlCommand cmd = new MySqlCommand(com, App.conn);
-                                cmd.ExecuteNonQuery();
-                                com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{user.GetLogin()}') ORDER BY id DESC";
-                                cmd = new MySqlCommand(com, App.conn);
-                                var reader = cmd.ExecuteReader();
-                                if (reader.Read())
+                                App.conn.Open();
+                            }
+                            catch (Exception ex)
+                            {
+                                await DisplayAlert("Ошибка", ex.Message, "OK");
+                            }
+                            if (App.conn.Ping())
+                            {
+                                try
                                 {
-                                    id = reader.GetInt32(0);
-                                }
-                                App.conn.Close();
-                                foreach (Image image in GridImage.Children.OfType<Image>())
-                                {
-                                    try
+                                    ActivityIndicator activityIndicator = new ActivityIndicator();
+                                    activityIndicator.Color = Color.Yellow;
+                                    activityIndicator.IsRunning = true;
+                                    MainStack.Children.Remove(SendButton);
+                                    MainStack.Children.Add(activityIndicator);
+                                    await Task.Delay(2000);
+                                    string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{user.GetLogin()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
+                                    MySqlCommand cmd = new MySqlCommand(com, App.conn);
+                                    cmd.ExecuteNonQuery();
+                                    com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{user.GetLogin()}') ORDER BY id DESC";
+                                    cmd = new MySqlCommand(com, App.conn);
+                                    var reader = cmd.ExecuteReader();
+                                    if (reader.Read())
                                     {
+                                        id = reader.GetInt32(0);
+                                    }
+                                    App.conn.Close();
+                                    foreach (Image image in GridImage.Children.OfType<Image>())
+                                    {
+                                        try
+                                        {
+                                            string localPath = image.Source.ToString();
+                                            localPath = localPath.Substring(6);
+                                            string[] strings = localPath.Split(new char[] { '/' });
+                                            string filename = strings[strings.Length - 1];
+                                            SendButton.BackgroundColor = Color.Green;
+                                            fTPClient.UploadFile(localPath, filename);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            await DisplayAlert("Ошибка", ex.Message, "OK");
+                                            //string localPath = image.Source.ToString();
+                                            //localPath = localPath.Substring(6);
+                                            //string[] strings = localPath.Split(new char[] { '/' });
+                                            //string filename = strings[strings.Length - 1];
+                                            //await DisplayAlert("Ошибка", ex.Message, "ОК");
+                                            //fTPClient.DeleteFile(filename);
+                                            //break;
+                                        }
+
+
+                                    }
+
+                                    foreach (Image image in GridImage.Children.OfType<Image>())
+                                    {
+                                        App.conn.Open();
                                         string localPath = image.Source.ToString();
                                         localPath = localPath.Substring(6);
                                         string[] strings = localPath.Split(new char[] { '/' });
                                         string filename = strings[strings.Length - 1];
-                                        SendButton.BackgroundColor = Color.Green;
-                                        await DisplayAlert("Внмиание", "Загрузка начнется по нажатию кнопки ОК", "ОК");
-                                        fTPClient.UploadFile(localPath, filename);
+                                        com = $"INSERT INTO photos (reportid, photo) VALUES ('{id}','{filename}')";
+                                        cmd = new MySqlCommand(com, App.conn);
+                                        cmd.ExecuteNonQuery();
+                                        App.conn.Close();
+                                        SendButton.BackgroundColor = Color.Default;
+                                        break;
                                     }
-                                    catch (Exception ex)
-                                    {
-                                        await DisplayAlert("Ошибка", ex.Message, "OK");
-                                        //string localPath = image.Source.ToString();
-                                        //localPath = localPath.Substring(6);
-                                        //string[] strings = localPath.Split(new char[] { '/' });
-                                        //string filename = strings[strings.Length - 1];
-                                        //await DisplayAlert("Ошибка", ex.Message, "ОК");
-                                        //fTPClient.DeleteFile(filename);
-                                        //break;
-                                    }
-
-
+                                    MainStack.Children.Remove(activityIndicator);
+                                    MainStack.Children.Add(SendButton2);
+                                    reader.Close();
                                 }
-
-                                foreach (Image image in GridImage.Children.OfType<Image>())
+                                catch (Exception ex)
                                 {
-                                    App.conn.Open();
-                                    string localPath = image.Source.ToString();
-                                    localPath = localPath.Substring(6);
-                                    string[] strings = localPath.Split(new char[] { '/' });
-                                    string filename = strings[strings.Length - 1];
-                                    com = $"INSERT INTO photos (reportid, photo) VALUES ('{id}','{filename}')";
-                                    cmd = new MySqlCommand(com, App.conn);
-                                    cmd.ExecuteNonQuery();
-                                    App.conn.Close();
-                                    SendButton.BackgroundColor = Color.Default;
-                                    break;
+                                    await DisplayAlert("Ошибка", ex.Message, "OK");
                                 }
-                                reader.Close();
-                            } catch(Exception ex)
-                            {
-                                await DisplayAlert("Ошибка", ex.Message, "OK");
                             }
-                        } else
-                        {
-                            await DisplayAlert("Ошибка", "Нет подключения к серверу", "ОК");
-                            SendButton.BackgroundColor = Color.Default;
-                            return;
+                            else
+                            {
+                                await DisplayAlert("Ошибка", "Нет подключения к серверу", "ОК");
+                                SendButton.BackgroundColor = Color.Default;
+                                return;
+                            }
+                            if (App.conn.State == ConnectionState.Open) { App.conn.Close(); }
+
                         }
-                        if (App.conn.State == ConnectionState.Open) { App.conn.Close(); }
 
+                        FtpWebResponse response = (FtpWebResponse)fTPClient.ftpresponse;
+                        if (response.StatusCode == FtpStatusCode.ClosingData)
+                        {
+                            await DisplayAlert("Успех!", "Передача успешна", "ОК");
+                            response.Dispose(); //TEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSTTTTTTTTTTTTT
+                            SendButton.BackgroundColor = Color.Default;
+                            await Navigation.PopAsync();
+                        }
+                        else
+                        {
+                            await DisplayAlert("Ошибка", "FTP Передача не удалась!", "ОК");
+                            response.Dispose(); //TTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTT
+                            SendButton.BackgroundColor = Color.Default;
+                            await Navigation.PopAsync();
+                        }
                     }
-
-                    FtpWebResponse response = (FtpWebResponse)fTPClient.ftpresponse;
-                if (response.StatusCode == FtpStatusCode.ClosingData)
-                {
-                    await DisplayAlert("Успех!", "Передача успешна", "ОК");
-                        response.Dispose(); //TEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSTTTTTTTTTTTTT
+                    catch (MySqlException ex)
+                    {
+                        await DisplayAlert("Ошибка", "MySQL Потеряно подключеие к серверу", "ОК");
                         SendButton.BackgroundColor = Color.Default;
-                        await Navigation.PopAsync();
+                        Navigation?.PopAsync();
+                    }
+                    catch (System.AggregateException ex)
+                    {
+                        SendButton.BackgroundColor = Color.Default;
+                        return;
+                    }
+                    catch (System.InvalidOperationException ex)
+                    {
+                        await DisplayAlert("Ошибка", "Строка 282" + ex.Message, "OK");
+                        SendButton.BackgroundColor = Color.Default;
+                        App.conn.Close();
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        await DisplayAlert("Ошибка", ex.Message, "OK");
+                        return;
+                    }
                 }
                 else
                 {
-                    await DisplayAlert("Ошибка", "FTP Передача не удалась!", "ОК");
-                        response.Dispose(); //TTEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTT
-                        SendButton.BackgroundColor = Color.Default;
-                        await Navigation.PopAsync();
-                }
-                }
-                catch (MySqlException ex)
-                {
-                    await DisplayAlert("Ошибка", "MySQL Потеряно подключеие к серверу", "ОК");
+                    await DisplayAlert("Ошибка", "Нет подключения к интернету", "ОК");
                     SendButton.BackgroundColor = Color.Default;
-                    Navigation?.PopAsync();
                 }
-                catch (System.AggregateException ex)
-                {
-                    SendButton.BackgroundColor = Color.Default;
-                    return;
-                } catch (System.InvalidOperationException ex)
-                {
-                    await DisplayAlert("Ошибка", "Строка 282" + ex.Message, "OK");
-                    SendButton.BackgroundColor = Color.Default;
-                    App.conn.Close();
-                    return;
-                } catch (Exception ex)
-                {
-                    await DisplayAlert("Ошибка", ex.Message, "OK");
-                    return;
-                }
-            } else
-            {
-                await DisplayAlert("Ошибка", "Нет подключения к интернету", "ОК");
-                SendButton.BackgroundColor = Color.Default;
             }
         }
     
