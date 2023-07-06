@@ -29,6 +29,7 @@ namespace PhotoClumba
         public int photoCount = 0;
         public string lastDate;
         public static Button SendButton2 = new Button();
+        public static bool IsFtpSuccess = true;
 
         public SelectedObjectPage()
         {
@@ -120,11 +121,8 @@ namespace PhotoClumba
                                     MainStack.Children.Remove(SendButton);
                                     MainStack.Children.Add(activityIndicator);
                                     await Task.Delay(2000);
-                                    string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{user.GetLogin()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
+                                    string com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{user.GetLogin()}') ORDER BY id DESC";
                                     MySqlCommand cmd = new MySqlCommand(com, App.conn);
-                                    cmd.ExecuteNonQuery();
-                                    com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{user.GetLogin()}') ORDER BY id DESC";
-                                    cmd = new MySqlCommand(com, App.conn);
                                     var reader = cmd.ExecuteReader();
                                     if (reader.Read())
                                     {
@@ -144,6 +142,7 @@ namespace PhotoClumba
                                         }
                                         catch (Exception ex)
                                         {
+                                            IsFtpSuccess = false;
                                             await DisplayAlert("Ошибка", ex.Message, "OK");
                                             //string localPath = image.Source.ToString();
                                             //localPath = localPath.Substring(6);
@@ -153,8 +152,6 @@ namespace PhotoClumba
                                             //fTPClient.DeleteFile(filename);
                                             //break;
                                         }
-
-
                                     }
 
                                     foreach (Image image in GridImage.Children.OfType<Image>())
@@ -170,6 +167,12 @@ namespace PhotoClumba
                                         App.conn.Close();
                                         SendButton.BackgroundColor = Color.Default;
                                         break;
+                                    }
+                                    if (IsFtpSuccess)
+                                    {
+                                        com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{user.GetLogin()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
+                                        cmd = new MySqlCommand(com, App.conn);
+                                        cmd.ExecuteNonQuery();
                                     }
                                     MainStack.Children.Remove(activityIndicator);
                                     MainStack.Children.Add(SendButton2);

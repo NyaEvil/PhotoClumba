@@ -26,8 +26,6 @@ namespace PhotoClumba
 
         protected override void OnAppearing()
         {
-            Console.WriteLine("Appeared!");
-            objectsList.SelectedItem = null;
             objectsList.SelectedItems.Clear();
         }
 
