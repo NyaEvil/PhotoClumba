@@ -94,12 +94,29 @@ namespace PhotoClumba
 
         private void Button_Clicked(object sender, EventArgs e)
         {
+            UserLoginStore userLoginStore = new UserLoginStore();
+            App.conn.Open();
+            MySqlCommand cmd = new MySqlCommand($"SELECT IsAdmin FROM users WHERE Login='{userLoginStore.GetLogin()}'", App.conn);
+            var reader = cmd.ExecuteReader();
+            reader.Read();
+            bool IsAdmin = reader.GetBoolean(0);
+            reader.Close();
+            App.conn.Close();
             if (objectsList.SelectedItems.Count!=0)
             {
-                SelectedObjectPage objectPage = new SelectedObjectPage();
-                objectPage.objects = objectsList.SelectedItems.ToArray();
-                objectPage.adress = Title;
-                Navigation.PushAsync(objectPage);
+                if (!IsAdmin)
+                {
+                    SelectedObjectPage objectPage = new SelectedObjectPage();
+                    objectPage.objects = objectsList.SelectedItems.ToArray();
+                    objectPage.adress = Title;
+                    Navigation.PushAsync(objectPage);
+                } else
+                {
+                    ManualReport manualReport = new ManualReport();
+                    manualReport.objects = objectsList.SelectedItems.ToArray();
+                    manualReport.adress = Title;
+                    Navigation.PushAsync(manualReport);
+                }
             } else
             {
                 DisplayAlert("Сообщение", "Выберите хотя бы один объект", "ОК");

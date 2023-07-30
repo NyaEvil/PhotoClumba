@@ -3,18 +3,38 @@ using System.IO;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using MySqlConnector;
+using PhotoClumba.CustomInstrument;
+using System.Threading.Tasks;
 
 namespace PhotoClumba
 {
     public partial class App : Application
     {
-        public static MySqlConnection conn = new MySqlConnection("server=malyshw5.beget.tech; uid=malyshw5_test; pwd=test123!; database=malyshw5_test; Connection Timeout=20");
+        public static MySqlConnection conn;
         public static bool IsUserLoggedIn { get; set; }
         public static string login;
         public static string password;
         public App()
         {
             InitializeComponent();
+            Settings.InitSettings();
+
+            try
+            {
+                conn = new MySqlConnection(Settings.GetDataString());
+                conn.Open();
+                conn.Close();
+            }
+            catch
+            {
+                IsUserLoggedIn = false;
+                var LoginInfo = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "IsUserLoggedIn.txt");
+                using (var writer = File.CreateText(LoginInfo))
+                {
+                    writer.WriteLineAsync(App.IsUserLoggedIn.ToString());
+                }
+            }
+
             Xamarin.Forms.Application.Current.UserAppTheme = OSAppTheme.Dark;
             var IsUserLoggedFile = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "IsUserLoggedIn.txt");
             string LoginState = string.Empty;

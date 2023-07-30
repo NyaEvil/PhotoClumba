@@ -11,6 +11,40 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Settings\FTPAdress.txt" />
+    <None Remove="Settings\FTPPassword.txt" />
+    <None Remove="Settings\FTPUser.txt" />
+    <None Remove="Settings\SQLAdress.txt" />
+    <None Remove="Settings\SQLDatabase.txt" />
+    <None Remove="Settings\SQLpwd.txt" />
+    <None Remove="Settings\SQLUser.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Settings\FTPAdress.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\FTPPassword.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\FTPUser.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\SQLAdress.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\SQLDatabase.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\SQLpwd.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Settings\SQLUser.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Birdie.MediaPlugin" Version="1.0.0" />
     <PackageReference Include="MySqlConnector" Version="2.2.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -23,10 +57,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="AdminSettings.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
     <EmbeddedResource Update="CustomInstrument\DashedBorderButton.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="LoginPage.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ManualReport.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="Objects.xaml">

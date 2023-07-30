@@ -1,28 +1,21 @@
-﻿using System;
+﻿using MySqlConnector;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 using System.IO;
-using Plugin.Media.Abstractions;
-using Plugin.Media;
-using System.Runtime.InteropServices.ComTypes;
-using Xamarin.Forms.PlatformConfiguration;
-using System.Net;
-using MySqlConnector;
-using System.Net.NetworkInformation;
-using System.ComponentModel;
-using System.Data;
-using static System.Net.WebRequestMethods;
-using System.Diagnostics;
+using System.Xml;
 
 namespace PhotoClumba
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class SelectedObjectPage : ContentPage
+    public partial class ManualReport : ContentPage
     {
         public Array objects;
         public string adress;
@@ -30,51 +23,104 @@ namespace PhotoClumba
         public string lastDate;
         public static Button SendButton2 = new Button();
 
-        public SelectedObjectPage()
+        public ManualReport()
         {
             InitializeComponent();
             SendButton2 = SendButton;
             DashedBorderButton dashed = new DashedBorderButton();
             dashed.buttonColor.Clicked += AddButton_Clicked;
             GridImage.Children.Add(dashed);
+            FillPickers();
+        }
+
+        private void FillPickers()
+        {
+            try
+            {
+                App.conn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT Login FROM users", App.conn);
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    EmployeesPicker.Items.Add(reader.GetString(0));
+                }
+                UserLoginStore userLoginStore = new UserLoginStore();
+                EmployeesPicker.SelectedItem = userLoginStore.GetLogin();
+                DatePicker.Date = DateTime.Now;
+                App.conn.Close();
+            } catch (Exception ex)
+            {
+
+            }
         }
 
         private async void AddButton_Clicked(object sender, EventArgs e)
         {
-            try
+            var result = await DisplayActionSheet("Сделать или выбрать фото?", "Отмена", null, "Выбрать", "Сделать");
+            if (result == "Сделать")
             {
-                var photo = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
+                try
                 {
-                    Title = $"xamarin.{DateTime.Now.ToString("dd.MM.yyyy_HH.mm.ss")}.png"
-                });
-                UserLoginStore userLoginStore = new UserLoginStore();
-                lastDate = DateTime.Now.ToString("dd.MM.yyyy_HH.mm.ss").ToString();
-                photo.FileName = $"{lastDate}_{userLoginStore.GetLogin()}.png";
-                string fileName = photo.FileName;
-                ISavePhoto savePhotoService = DependencyService.Get<ISavePhoto>();
-                string actualPath = savePhotoService.SaveFile(fileName, photo);
-                System.IO.File.Delete(photo.FullPath);
+                    var photo = await MediaPicker.CapturePhotoAsync(new MediaPickerOptions
+                    {
+                        Title = $"xamarin.{DateTime.Now.ToString("dd.MM.yyyy_HH.mm.ss")}.png"
+                    });
+                    UserLoginStore userLoginStore = new UserLoginStore();
+                    lastDate = DateTime.Now.ToString("dd.MM.yyyy_HH.mm.ss").ToString();
+                    photo.FileName = $"{lastDate}_{userLoginStore.GetLogin()}.png";
+                    string fileName = photo.FileName;
+                    ISavePhoto savePhotoService = DependencyService.Get<ISavePhoto>();
+                    string actualPath = savePhotoService.SaveFile(fileName, photo);
+                    System.IO.File.Delete(photo.FullPath);
 
-                Image img = new Image();
-                img.Source = ImageSource.FromFile(actualPath);
-                int curcol = GridImage.ColumnDefinitions.Count - 1;
+                    Image img = new Image();
+                    img.Source = ImageSource.FromFile(actualPath);
+                    int curcol = GridImage.ColumnDefinitions.Count - 1;
 
-                GridImage.Children.RemoveAt(curcol);
-                GridImage.Children.Add(img, curcol, 0);
-                GridImage.ColumnDefinitions.Add(new ColumnDefinition());
-            }
-            catch (Exception ex)
+                    GridImage.Children.RemoveAt(curcol);
+                    GridImage.Children.Add(img, curcol, 0);
+                    GridImage.ColumnDefinitions.Add(new ColumnDefinition());
+                }
+                catch (Exception ex)
+                {
+                    //await DisplayAlert("Ошибка", ex.Message, "OK");
+                    GridImage.Children.RemoveAt(GridImage.ColumnDefinitions.Count - 1);
+                }
+                finally
+                {
+                    DashedBorderButton dashed = new DashedBorderButton();
+                    dashed.buttonColor.Clicked += AddButton_Clicked;
+                    int curcol = GridImage.ColumnDefinitions.Count - 1;
+                    GridImage.Children.Add(dashed, curcol, 0);
+                    photoCount++;
+                }
+            } else if (result == "Выбрать")
             {
-                //await DisplayAlert("Ошибка", ex.Message, "OK");
-                GridImage.Children.RemoveAt(GridImage.ColumnDefinitions.Count-1);
-            }
-            finally
-            {
-                DashedBorderButton dashed = new DashedBorderButton();
-                dashed.buttonColor.Clicked += AddButton_Clicked;
-                int curcol = GridImage.ColumnDefinitions.Count - 1;
-                GridImage.Children.Add(dashed, curcol, 0);
-                photoCount++;
+                try
+                {
+                    var photo = await MediaPicker.PickPhotoAsync();
+                    string actualPath = photo.FullPath;
+                    lastDate = DatePicker.Date.ToString();
+                    Image img = new Image();
+                    img.Source = ImageSource.FromFile(actualPath);
+                    int curcol = GridImage.ColumnDefinitions.Count - 1;
+                    GridImage.Children.RemoveAt(curcol);
+                    GridImage.Children.Add(img, curcol, 0);
+                    GridImage.ColumnDefinitions.Add(new ColumnDefinition());
+                }
+                catch (Exception ex)
+                {
+                    //await DisplayAlert("Ошибка", ex.Message, "OK");
+                    GridImage.Children.RemoveAt(GridImage.ColumnDefinitions.Count - 1);
+                }
+                finally
+                {
+                    DashedBorderButton dashed = new DashedBorderButton();
+                    dashed.buttonColor.Clicked += AddButton_Clicked;
+                    int curcol = GridImage.ColumnDefinitions.Count - 1;
+                    GridImage.Children.Add(dashed, curcol, 0);
+                    photoCount++;
+                }
             }
         }
 
@@ -149,32 +195,34 @@ namespace PhotoClumba
                             {
                                 try
                                 {
-                                        string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{user.GetLogin()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
-                                        MySqlCommand cmd = new MySqlCommand(com, App.conn);
-                                        cmd.ExecuteNonQuery();
+                                    lastDate = /*DatePicker.Date.ToString() + "_" + DateTime.Now.ToString("HH:mm:ss")*/ DatePicker.Date.Add(DateTime.Now.TimeOfDay).ToString();
+                                    Console.WriteLine(lastDate);
+                                    string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{EmployeesPicker.SelectedItem.ToString()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
+                                    MySqlCommand cmd = new MySqlCommand(com, App.conn);
+                                    cmd.ExecuteNonQuery();
 
-                                        com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{user.GetLogin()}') ORDER BY id DESC";
+                                    com = $"SELECT id FROM reports WHERE (дата='{lastDate}' AND пользователь = '{EmployeesPicker.SelectedItem.ToString()}') ORDER BY id DESC";
+                                    cmd = new MySqlCommand(com, App.conn);
+                                    var reader = cmd.ExecuteReader();
+                                    if (reader.Read())
+                                    {
+                                        id = reader.GetInt32(0);
+                                    }
+                                    reader.Close();
+                                    App.conn.Close();
+
+                                    foreach (Image image in GridImage.Children.OfType<Image>())
+                                    {
+                                        App.conn.Open();
+                                        string localPath = image.Source.ToString();
+                                        localPath = localPath.Substring(6);
+                                        string[] strings = localPath.Split(new char[] { '/' });
+                                        string filename = strings[strings.Length - 1];
+                                        com = $"INSERT INTO photos (reportid, photo) VALUES ('{id}','{filename}')";
                                         cmd = new MySqlCommand(com, App.conn);
-                                        var reader = cmd.ExecuteReader();
-                                        if (reader.Read())
-                                        {
-                                            id = reader.GetInt32(0);
-                                        }
-                                        reader.Close();
+                                        cmd.ExecuteNonQuery();
                                         App.conn.Close();
-
-                                        foreach (Image image in GridImage.Children.OfType<Image>())
-                                        {
-                                            App.conn.Open();
-                                            string localPath = image.Source.ToString();
-                                            localPath = localPath.Substring(6);
-                                            string[] strings = localPath.Split(new char[] { '/' });
-                                            string filename = strings[strings.Length - 1];
-                                            com = $"INSERT INTO photos (reportid, photo) VALUES ('{id}','{filename}')";
-                                            cmd = new MySqlCommand(com, App.conn);
-                                            cmd.ExecuteNonQuery();
-                                            App.conn.Close();
-                                        }
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -243,7 +291,6 @@ namespace PhotoClumba
                 }
             }
         }
-    
-    }
 
+    }
 }

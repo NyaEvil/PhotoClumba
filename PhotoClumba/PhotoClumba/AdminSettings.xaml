@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhotoClumba.AdminSettings"
+             Background="#424242">
+    <ContentPage.Content>
+        <StackLayout>
+            <Label Text="FTP Настройки"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                </Grid.RowDefinitions>
+                <Label Text="Адрес: " Grid.Column="0" Grid.Row="0" VerticalTextAlignment="Center"/>
+                <Entry x:Name="FTPAdress" Grid.Column="1" Grid.Row="0" TextColor="LightGray"/>
+                <Label Text="Пользователь: " Grid.Column="0" Grid.Row="1" VerticalTextAlignment="Center"/>
+                <Entry x:Name="FTPUser" Grid.Column="1" Grid.Row="1" TextColor="LightGray"/>
+                <Label Text="Пароль: " Grid.Column="0" Grid.Row="2" VerticalTextAlignment="Center"/>
+                <Entry x:Name="FTPPassword" Grid.Column="1" Grid.Row="2" TextColor="LightGray"/>
+            </Grid>
+            <Label Text="MySQL настройки"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                </Grid.RowDefinitions>
+                <Label Text="Сервер: " Grid.Column="0" Grid.Row="0" VerticalTextAlignment="Center"/>
+                <Entry x:Name="SQLAdress" Grid.Column="1" Grid.Row="0" TextColor="LightGray"/>
+                <Label Text="Пользователь: " Grid.Column="0" Grid.Row="1" VerticalTextAlignment="Center"/>
+                <Entry x:Name="SQLUser" Grid.Column="1" Grid.Row="1" TextColor="LightGray"/>
+                <Label Text="Пароль: " Grid.Column="0" Grid.Row="2" VerticalTextAlignment="Center"/>
+                <Entry x:Name="SQLpwd" Grid.Column="1" Grid.Row="2" TextColor="LightGray"/>
+                <Label Text="Имя БД: " Grid.Column="0" Grid.Row="3" VerticalTextAlignment="Center"/>
+                <Entry x:Name="SQLDatabase" Grid.Column="1" Grid.Row="3" TextColor="LightGray"/>
+            </Grid>
+            <Button x:Name="AcceptButton" Text="Принять" HorizontalOptions="Center" VerticalOptions="End" Clicked="AcceptButton_Clicked"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

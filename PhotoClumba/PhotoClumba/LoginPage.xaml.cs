@@ -32,6 +32,7 @@ namespace PhotoClumba
                     AuthBut.IsEnabled = false;
                     string com = $"SELECT IsLogged FROM users WHERE (Login='{AuthLogin.Text}' AND Password='{AuthPassword.Text}')";
                     MySqlCommand cmd = new MySqlCommand(com, App.conn);
+                    cmd.CommandTimeout = 3000;
                     var reader = cmd.ExecuteReader();
                     if (reader.Read())
                     {
@@ -60,6 +61,7 @@ namespace PhotoClumba
                             UserLoginStore userLoginStore = new UserLoginStore();
                             com = $"UPDATE users SET IsLogged = 1 WHERE (Login='{userLoginStore.GetLogin()}')";
                             cmd = new MySqlCommand(com, App.conn); cmd.ExecuteNonQuery();
+                            cmd.CommandTimeout = 300;
                             App.conn.Close();
                             Navigation.InsertPageBefore(new MainPage(), this);
                             await Navigation.PopAsync();
@@ -88,10 +90,23 @@ namespace PhotoClumba
             {
                 await DisplayAlert("Ошибка", "Проверьте подключение к серверу", "ОК");
             }
+            catch (System.NullReferenceException)
+            {
+                await DisplayAlert("Ошибка", "Обратитесь к системному администратору за настройкой", "ОК");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Ошибка", ex.Message, "OK");
+            }
             finally
             {
                 AuthBut.IsEnabled = true;
             }
+        }
+
+        private void Logo_Clicked(object sender, EventArgs e)
+        {
+            Navigation.PushAsync(new AdminSettings());
         }
     }
 }

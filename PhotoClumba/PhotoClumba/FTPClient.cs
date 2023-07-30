@@ -17,7 +17,7 @@ namespace PhotoClumba
         {
             UserId = userId;
             Password = password;
-            ftpServer = "ftp://tkton.ap35.ru";
+            ftpServer = File.ReadAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "FTPAdress.txt"), Encoding.Default);
         }
 
         public void UploadFile(string localFilePath, string remoteFileName)

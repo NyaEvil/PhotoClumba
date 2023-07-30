@@ -18,7 +18,7 @@
             <ColumnDefinition Width="5*"></ColumnDefinition>
             <ColumnDefinition Width="1*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <Image x:Name="Logo" Source="tonsh_logo.png" Grid.Row="1" Grid.Column="1"/>
+        <ImageButton x:Name="Logo" Source="tonsh_logo.png" Grid.Row="1" Grid.Column="1" Clicked="Logo_Clicked" BackgroundColor="#424242"/>
         <Entry x:Name ="AuthLogin" Placeholder="Логин" Grid.Row="2" Grid.ColumnSpan="3" PlaceholderColor="#EEEEEE" TextColor="#EEEEEE"/>
         <Entry x:Name="AuthPassword" Placeholder="Пароль" Grid.Row="3" Grid.ColumnSpan="3" IsPassword="True" PlaceholderColor="#EEEEEE" TextColor="#EEEEEE"/>
         <Button x:Name="AuthBut" Text="Войти" Clicked="AuthButton" Grid.Row="4" Grid.Column="1" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="150" HeightRequest="150" CornerRadius="75" TextColor="#EEEEEE" BackgroundColor="#787b74"/>
