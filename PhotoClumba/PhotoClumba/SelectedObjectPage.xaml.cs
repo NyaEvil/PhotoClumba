@@ -16,8 +16,8 @@ using MySqlConnector;
 using System.Net.NetworkInformation;
 using System.ComponentModel;
 using System.Data;
-using static System.Net.WebRequestMethods;
 using System.Diagnostics;
+using FFImageLoading.Forms;
 
 namespace PhotoClumba
 {
@@ -55,7 +55,10 @@ namespace PhotoClumba
                 string actualPath = savePhotoService.SaveFile(fileName, photo);
                 System.IO.File.Delete(photo.FullPath);
 
-                Image img = new Image();
+                //Image img = new Image();
+                CachedImage img = new CachedImage();
+                img.BitmapOptimizations = true;
+                img.DownsampleToViewSize = true;
                 img.Source = ImageSource.FromFile(actualPath);
                 int curcol = GridImage.ColumnDefinitions.Count - 1;
 
@@ -65,6 +68,7 @@ namespace PhotoClumba
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 //await DisplayAlert("Ошибка", ex.Message, "OK");
                 GridImage.Children.RemoveAt(GridImage.ColumnDefinitions.Count-1);
             }
@@ -83,7 +87,7 @@ namespace PhotoClumba
             var result = await DisplayAlert("Внмиание", "Загрузка начнется по нажатию кнопки ОК", "ОК", "Отмена");
             if (result)
             {
-                if (!GridImage.Children.OfType<Image>().Any())
+                if (!GridImage.Children.OfType<CachedImage>().Any())
                 {
                     await DisplayAlert("Ошибка", "Сделайте хотя бы одно фото", "ОК");
                     return;
@@ -105,7 +109,7 @@ namespace PhotoClumba
                         string ftpuser = System.IO.File.ReadAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "FTPUser.txt"));
                         string ftppassword = System.IO.File.ReadAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "FTPPassword.txt"));
                         FTPClient fTPClient = new FTPClient(ftpuser, ftppassword);
-                        foreach (Image image in GridImage.Children.OfType<Image>())
+                        foreach (CachedImage image in GridImage.Children.OfType<CachedImage>())
                         {
                             try
                             {
@@ -136,13 +140,15 @@ namespace PhotoClumba
                             int id = -1;
                             try
                             {
+                                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                                 App.conn.Open();
                             }
                             catch (Exception ex)
                             {
-                                await DisplayAlert("Ошибка", ex.Message, "OK");
+                                await DisplayAlert("Ошибка", "SQL "+ex.Message, "OK");
                                 MainStack.Children.Remove(activityIndicator);
                                 MainStack.Children.Add(SendButton2);
+                                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                                 return;
                             }
                             if (App.conn.Ping())
@@ -163,7 +169,7 @@ namespace PhotoClumba
                                         reader.Close();
                                         App.conn.Close();
 
-                                        foreach (Image image in GridImage.Children.OfType<Image>())
+                                        foreach (CachedImage image in GridImage.Children.OfType<CachedImage>())
                                         {
                                             App.conn.Open();
                                             string localPath = image.Source.ToString();
@@ -181,6 +187,7 @@ namespace PhotoClumba
                                     await DisplayAlert("Ошибка", "SQL " + ex.Message, "OK");
                                     MainStack.Children.Remove(activityIndicator);
                                     MainStack.Children.Add(SendButton2);
+                                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                                     return;
                                 }
                             }
@@ -189,6 +196,7 @@ namespace PhotoClumba
                                 await DisplayAlert("Ошибка", "Нет подключения к серверу", "ОК");
                                 MainStack.Children.Remove(activityIndicator);
                                 MainStack.Children.Add(SendButton2);
+                                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                                 return;
                             }
                             if (App.conn.State == ConnectionState.Open) { App.conn.Close(); }
@@ -210,12 +218,15 @@ namespace PhotoClumba
                         await DisplayAlert("Ошибка", "MySQL Потеряно подключеие к серверу", "ОК");
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                     catch (System.AggregateException ex)
                     {
+                        await DisplayAlert("Ошибка", "Строка 282" + ex.Message, "OK");
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                     catch (System.InvalidOperationException ex)
@@ -223,7 +234,7 @@ namespace PhotoClumba
                         await DisplayAlert("Ошибка", "Строка 282" + ex.Message, "OK");
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
-                        App.conn.Close();
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                     catch (Exception ex)
@@ -231,6 +242,7 @@ namespace PhotoClumba
                         await DisplayAlert("Ошибка", ex.Message, "OK");
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                 }
@@ -239,6 +251,7 @@ namespace PhotoClumba
                     await DisplayAlert("Ошибка", "Нет подключения к интернету", "ОК");
                     MainStack.Children.Remove(activityIndicator);
                     MainStack.Children.Add(SendButton2);
+                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                     return;
                 }
             }

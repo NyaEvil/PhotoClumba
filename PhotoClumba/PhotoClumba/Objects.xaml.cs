@@ -1,6 +1,7 @@
 ﻿using MySqlConnector;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -31,7 +32,16 @@ namespace PhotoClumba
 
         private async void CreateObjectList()
         {
-            App.conn.Open();
+            try
+            {
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                App.conn.Open();
+            } catch (Exception ex)
+            {
+                await DisplayAlert("Ошибка", "Нет подключения к серверу, перезагрузите приложение" + ex.Message, "ОК");
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                return;
+            }
             if (App.conn.Ping())
             {
                 App.conn.Close();
@@ -76,50 +86,68 @@ namespace PhotoClumba
                 }
                 catch (AggregateException ex)
                 {
-                    App.conn.Close();
+                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                     await DisplayAlert("Ошибка", ex.Message, "OK");
                     return;
                 }
                 catch (MySqlException ex)
                 {
                     await DisplayAlert("Ошибка", "Потеряно соединение с сервером", "ОК");
-                    Process.GetCurrentProcess().Kill();
+                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    await DisplayAlert("Ошибка", ex.Message, "ОК");
+                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                    return;
                 }
             } else
             {
                 await DisplayAlert("Ошибка", "Потеряно соединение с сервером", "ОК");
-                Process.GetCurrentProcess().Kill();
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                return;
             }
         }
 
-        private void Button_Clicked(object sender, EventArgs e)
+        private async void Button_Clicked(object sender, EventArgs e)
         {
-            UserLoginStore userLoginStore = new UserLoginStore();
-            App.conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"SELECT IsAdmin FROM users WHERE Login='{userLoginStore.GetLogin()}'", App.conn);
-            var reader = cmd.ExecuteReader();
-            reader.Read();
-            bool IsAdmin = reader.GetBoolean(0);
-            reader.Close();
-            App.conn.Close();
-            if (objectsList.SelectedItems.Count!=0)
+            try
             {
-                if (!IsAdmin)
+                UserLoginStore userLoginStore = new UserLoginStore();
+                App.conn.Open();
+                MySqlCommand cmd = new MySqlCommand($"SELECT IsAdmin FROM users WHERE Login='{userLoginStore.GetLogin()}'", App.conn);
+                var reader = cmd.ExecuteReader();
+                reader.Read();
+                bool IsAdmin = reader.GetBoolean(0);
+                reader.Close();
+                App.conn.Close();
+                if (objectsList.SelectedItems.Count != 0)
                 {
-                    SelectedObjectPage objectPage = new SelectedObjectPage();
-                    objectPage.objects = objectsList.SelectedItems.ToArray();
-                    objectPage.adress = Title;
-                    Navigation.PushAsync(objectPage);
-                } else
-                {
-                    ManualReport manualReport = new ManualReport();
-                    manualReport.objects = objectsList.SelectedItems.ToArray();
-                    manualReport.adress = Title;
-                    Navigation.PushAsync(manualReport);
+                    if (!IsAdmin)
+                    {
+                        SelectedObjectPage objectPage = new SelectedObjectPage();
+                        objectPage.objects = objectsList.SelectedItems.ToArray();
+                        objectPage.adress = Title;
+                        Navigation.PushAsync(objectPage);
+                    }
+                    else
+                    {
+                        ManualReport manualReport = new ManualReport();
+                        manualReport.objects = objectsList.SelectedItems.ToArray();
+                        manualReport.adress = Title;
+                        Navigation.PushAsync(manualReport);
+                    }
                 }
-            } else
+                else
+                {
+                    await DisplayAlert("Сообщение", "Выберите хотя бы один объект", "ОК");
+                }
+            } catch (Exception ex)
             {
-                DisplayAlert("Сообщение", "Выберите хотя бы один объект", "ОК");
+                await DisplayAlert("Внимание", ex.Message, "OK");
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                return;
             }
         }
 

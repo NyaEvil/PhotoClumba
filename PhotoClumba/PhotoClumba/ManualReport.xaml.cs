@@ -33,7 +33,7 @@ namespace PhotoClumba
             FillPickers();
         }
 
-        private void FillPickers()
+        private async void FillPickers()
         {
             try
             {
@@ -50,7 +50,8 @@ namespace PhotoClumba
                 App.conn.Close();
             } catch (Exception ex)
             {
-
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                await DisplayAlert("Ошибка", ex.Message, "ОК");
             }
         }
 
@@ -189,6 +190,7 @@ namespace PhotoClumba
                                 await DisplayAlert("Ошибка", ex.Message, "OK");
                                 MainStack.Children.Remove(activityIndicator);
                                 MainStack.Children.Add(SendButton2);
+                                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                                 return;
                             }
                             if (App.conn.Ping())
@@ -196,7 +198,6 @@ namespace PhotoClumba
                                 try
                                 {
                                     lastDate = /*DatePicker.Date.ToString() + "_" + DateTime.Now.ToString("HH:mm:ss")*/ DatePicker.Date.Add(DateTime.Now.TimeOfDay).ToString();
-                                    Console.WriteLine(lastDate);
                                     string com = $"INSERT INTO reports (дата,пользователь,прополото,полито,цветы,комментарий,adress,объект) VALUES ('{lastDate}','{EmployeesPicker.SelectedItem.ToString()}','{prop}','{polito}', '{flow}', '{comment.Text}', '{adress}', '{item.ToString()}')";
                                     MySqlCommand cmd = new MySqlCommand(com, App.conn);
                                     cmd.ExecuteNonQuery();
@@ -229,6 +230,7 @@ namespace PhotoClumba
                                     await DisplayAlert("Ошибка", "SQL " + ex.Message, "OK");
                                     MainStack.Children.Remove(activityIndicator);
                                     MainStack.Children.Add(SendButton2);
+                                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                                     return;
                                 }
                             }
@@ -237,9 +239,10 @@ namespace PhotoClumba
                                 await DisplayAlert("Ошибка", "Нет подключения к серверу", "ОК");
                                 MainStack.Children.Remove(activityIndicator);
                                 MainStack.Children.Add(SendButton2);
+                                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                                 return;
                             }
-                            if (App.conn.State == ConnectionState.Open) { App.conn.Close(); }
+                            if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
 
                         }
 
@@ -250,7 +253,6 @@ namespace PhotoClumba
                             response.Dispose();
                             MainStack.Children.Remove(activityIndicator);
                             MainStack.Children.Add(SendButton2);
-                            await Navigation.PopAsync();
                         }
                     }
                     catch (MySqlException ex)
@@ -258,12 +260,14 @@ namespace PhotoClumba
                         await DisplayAlert("Ошибка", "MySQL Потеряно подключеие к серверу", "ОК");
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                     catch (System.AggregateException ex)
                     {
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                     catch (System.InvalidOperationException ex)
@@ -271,7 +275,7 @@ namespace PhotoClumba
                         await DisplayAlert("Ошибка", "Строка 282" + ex.Message, "OK");
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
-                        App.conn.Close();
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                     catch (Exception ex)
@@ -279,6 +283,7 @@ namespace PhotoClumba
                         await DisplayAlert("Ошибка", ex.Message, "OK");
                         MainStack.Children.Remove(activityIndicator);
                         MainStack.Children.Add(SendButton2);
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                         return;
                     }
                 }
@@ -287,6 +292,7 @@ namespace PhotoClumba
                     await DisplayAlert("Ошибка", "Нет подключения к интернету", "ОК");
                     MainStack.Children.Remove(activityIndicator);
                     MainStack.Children.Add(SendButton2);
+                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                     return;
                 }
             }

@@ -22,6 +22,8 @@ namespace PhotoClumba
             InitializeComponent();
             UserLoginStore userLoginStore = new UserLoginStore();
             string storedLogin = userLoginStore.GetLogin();
+            try
+            {
             if (App.conn.State == ConnectionState.Closed) { App.conn.Open(); }
             if (App.conn.Ping())
             {
@@ -35,6 +37,9 @@ namespace PhotoClumba
                 {
                     YouveBeenDeleted();
                 }
+            } else
+            {
+                NoConnection();
             }
             var titleView = new SearchBar { HeightRequest = 44, WidthRequest = 300, };
             titleView.TextChanged += TitleView_TextChanged;
@@ -42,6 +47,12 @@ namespace PhotoClumba
             NavigationPage.SetTitleView(this, titleView);
             App.conn.Close();
             CreateAdressList();
+            }
+            catch (Exception ex)
+            {
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                NoConnection();
+            }
         }
 
         public async void YouveBeenDeleted()
@@ -100,20 +111,27 @@ namespace PhotoClumba
                 }
                 catch (AggregateException ex)
                 {
-                    App.conn.Close();
+                    if (App.conn.State == ConnectionState.Open)
+                        App.conn.Close();
                 } 
                 catch (MySqlException ex)
                 {
-                    await DisplayAlert("Ошибка", ex.Message, "ОК");
+                    if (App.conn.State == ConnectionState.Open)
+                        App.conn.Close();
+                    await DisplayAlert("Ошибка", "SQL "+ex.Message, "ОК");
                     Process.GetCurrentProcess().Kill();
                 }
                 catch (Exception ex)
                 {
+                    if (App.conn.State == ConnectionState.Open)
+                        App.conn.Close();
                     await DisplayAlert("Ошибка", ex.Message, "OK");
                     Process.GetCurrentProcess().Kill();
                 }
             } else
             {
+                if (App.conn.State == ConnectionState.Open)
+                    App.conn.Close();
                 await DisplayAlert("Ошибка", "Проверьте подключение к сети или серверу", "ОК");
                 System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
@@ -125,22 +143,37 @@ namespace PhotoClumba
             Navigation.PushAsync(nextpage);
         }
 
-        private void ToolbarItem_Clicked(object sender, EventArgs e)
+        private async void ToolbarItem_Clicked(object sender, EventArgs e)
         {
-            App.IsUserLoggedIn = false;
-            var LoginInfo = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "IsUserLoggedIn.txt");
-            using (var writer = File.CreateText(LoginInfo))
+            var result = await DisplayAlert("Внмиание", "Вы точно хотите выйти?", "Да", "Отмена");
+            try
             {
-                writer.WriteLineAsync(App.IsUserLoggedIn.ToString());
+                App.conn.Open();
+                UserLoginStore store = new UserLoginStore();
+                MySqlCommand cmd = new MySqlCommand($"UPDATE users SET IsLogged = 0 WHERE (Login = '{store.GetLogin()}')", App.conn);
+                cmd.ExecuteNonQuery();
+                App.conn.Close();
+                App.IsUserLoggedIn = false;
+                var LoginInfo = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "IsUserLoggedIn.txt");
+                using (var writer = File.CreateText(LoginInfo))
+                {
+                    await writer.WriteLineAsync(App.IsUserLoggedIn.ToString());
+                }
+                LoginPage loginPage = new LoginPage();
+                Navigation.InsertPageBefore(loginPage, this);
+                Navigation.PopAsync();
+            } catch (Exception ex)
+            {
+                await DisplayAlert("Ошибка", ex.Message, "OK");
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                return;
             }
-            App.conn.Open();
-            UserLoginStore store = new UserLoginStore();
-            MySqlCommand cmd = new MySqlCommand($"UPDATE users SET IsLogged = 0 WHERE (Login = '{store.GetLogin()}')", App.conn);
-            cmd.ExecuteNonQuery();
-            App.conn.Close();
-            LoginPage loginPage = new LoginPage();
-            Navigation.InsertPageBefore(loginPage, this);
-            Navigation.PopAsync();
+        }
+        
+
+        public async void NoConnection()
+        {
+            await DisplayAlert("Внимание", "Нет подключения к серверу", "ОК");
         }
     }
 }

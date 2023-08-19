@@ -5,6 +5,7 @@ using Xamarin.Forms.Xaml;
 using MySqlConnector;
 using PhotoClumba.CustomInstrument;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace PhotoClumba
 {
@@ -22,17 +23,10 @@ namespace PhotoClumba
             try
             {
                 conn = new MySqlConnection(Settings.GetDataString());
-                conn.Open();
-                conn.Close();
             }
-            catch
+            catch (Exception ex)
             {
-                IsUserLoggedIn = false;
-                var LoginInfo = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "IsUserLoggedIn.txt");
-                using (var writer = File.CreateText(LoginInfo))
-                {
-                    writer.WriteLineAsync(App.IsUserLoggedIn.ToString());
-                }
+                Process.GetCurrentProcess().Kill();
             }
 
             Xamarin.Forms.Application.Current.UserAppTheme = OSAppTheme.Dark;

@@ -12,6 +12,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
+using System.Data;
 
 namespace PhotoClumba
 {
@@ -32,7 +33,6 @@ namespace PhotoClumba
                     AuthBut.IsEnabled = false;
                     string com = $"SELECT IsLogged FROM users WHERE (Login='{AuthLogin.Text}' AND Password='{AuthPassword.Text}')";
                     MySqlCommand cmd = new MySqlCommand(com, App.conn);
-                    cmd.CommandTimeout = 3000;
                     var reader = cmd.ExecuteReader();
                     if (reader.Read())
                     {
@@ -60,8 +60,11 @@ namespace PhotoClumba
                             }
                             UserLoginStore userLoginStore = new UserLoginStore();
                             com = $"UPDATE users SET IsLogged = 1 WHERE (Login='{userLoginStore.GetLogin()}')";
-                            cmd = new MySqlCommand(com, App.conn); cmd.ExecuteNonQuery();
-                            cmd.CommandTimeout = 300;
+                            cmd = new MySqlCommand(com, App.conn); 
+                            cmd.ExecuteNonQuery();
+                            com = $"UPDATE users SET version = '{VersionTracking.CurrentVersion}' WHERE (Login = '{userLoginStore.GetLogin()}')";
+                            cmd = new MySqlCommand(com, App.conn);
+                            cmd.ExecuteNonQuery();
                             App.conn.Close();
                             Navigation.InsertPageBefore(new MainPage(), this);
                             await Navigation.PopAsync();
@@ -70,36 +73,40 @@ namespace PhotoClumba
                     else
                     {
                         await DisplayAlert("Неудача", "Неверный логин или пароль", "ОК");
-                        App.conn.Close();
+                        if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                     }
                 }
                 else
                 {
                     await DisplayAlert("Ошибка подключения", "Нет подключения к интернету или серверу", "ОК");
-                    App.conn.Close();
+                    if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                     AuthLogin.Text = null;
                     AuthPassword.Text = null;
                 }
             }
             catch (AggregateException)
             {
-                App.conn.Close();
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                 return;
             }
-            catch (MySqlException)
+            catch (MySqlException ex)
             {
-                await DisplayAlert("Ошибка", "Проверьте подключение к серверу", "ОК");
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
+                await DisplayAlert("Ошибка", "Проверьте подключение к серверу" + ex.Message, "ОК");
             }
             catch (System.NullReferenceException)
             {
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                 await DisplayAlert("Ошибка", "Обратитесь к системному администратору за настройкой", "ОК");
             }
             catch (Exception ex)
             {
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                 await DisplayAlert("Ошибка", ex.Message, "OK");
             }
             finally
             {
+                if (App.conn.State == ConnectionState.Open || App.conn.State == ConnectionState.Connecting) { App.conn.Close(); }
                 AuthBut.IsEnabled = true;
             }
         }
